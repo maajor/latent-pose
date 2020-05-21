@@ -129,4 +129,9 @@ dmypy.json
 .pyre/
 
 *.bvh
-*.pkl
+data/raw
+data/extracted
+data/train
+snapshots/
+*.blend1
+joints.pkl

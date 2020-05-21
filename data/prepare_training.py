@@ -30,9 +30,9 @@ lens = int(poses.shape[0])
 pose_train = poses[:int(0.7*lens),:,:]
 pose_val = poses[int(0.7*lens):int(0.9*lens),:,:]
 pose_test = poses[int(0.9*lens):,:,:]
-torch.save(torch.from_numpy(pose_train), "data/pose_train.pt")
-torch.save(torch.from_numpy(pose_val), "data/pose_val.pt")
-torch.save(torch.from_numpy(pose_test), "data/pose_test.pt")
+torch.save(torch.from_numpy(pose_train), "data/train/pose_train.pt")
+torch.save(torch.from_numpy(pose_val), "data/train/pose_val.pt")
+torch.save(torch.from_numpy(pose_test), "data/train/pose_test.pt")
 
 
 
