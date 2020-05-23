@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# Extract skeleton description from bvh file
 
 import bpy
 import numpy as np
@@ -16,9 +22,11 @@ bone_mapping = {}
 
 num_bones =  len(arm.bones)
 
+# bone's name to id mapping
 for id, bone in enumerate(arm.bones):
     bone_mapping[bone.name] = id
-    
+
+# bone's child-to-parent id mapping 
 kintree_table = []
 for bone in arm.bones:
     
@@ -32,6 +40,7 @@ for bone in arm.bones:
         parent_id = bone_mapping[parent_bone_name]
     kintree_table.append([parent_id, this_bone_id])
 
+# bone's LocalRestTransform
 J = []
 for bone in arm.bones:
     if bone.parent != None:

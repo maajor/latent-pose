@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# batch script to extract all animation in bvh files
+
 import os
 import tqdm
 mocap_path = "data/raw/"

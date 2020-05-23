@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# A simple server to predict IK poses
+
 from flask import Flask, request, jsonify
 import numpy as np
 import torch
@@ -18,26 +25,27 @@ SKELETON = "data/skeleton.pt"
 VPOSER   = "model/vposer.pt"
 model = VPoserPredictor(skeleton_path=SKELETON, vposer_path=VPOSER)
 model.to(device)
-optimizer = optim.Adam([model.pose_embedding, model.global_rotation, model.global_trans], lr=2e-1)
+optimizer = optim.Adam([model.pose_embedding, model.global_trans], lr=3e-1)
 
-def predict_pose(joint_pos, joint_mask, iteration=200):
+def predict_pose(joint_pos, joint_mask, iteration=100):
     start = time.time()
     model.pose_embedding.requires_grad = True
-    model.global_rotation.requires_grad = True
     model.global_trans.requires_grad = True
 
     for it in range(0, iteration):
         optimizer.zero_grad()
         joint_pos_predicted = model.forward()
-        loss = F.mse_loss(joint_pos_predicted*joint_mask, joint_pos*joint_mask) + 1e-2 * model.pose_embedding.pow(2).sum()
+        loss = F.mse_loss(joint_pos_predicted*joint_mask, joint_pos*joint_mask) + 1e-3 * model.pose_embedding.pow(2).sum()
         loss.backward()
         optimizer.step()
         # print("Iteration {}, loss at {}".format(it, loss.item()))
 
     pose, trans = model.get_pose()
+
+    # pose decode to blender's axis-angle float4 format
     theta = torch.sqrt(torch.sum((pose)**2, dim=2)).view(1, -1, 1)
     r_hat = pose / theta
-    aa = torch.zeros((32,4))
+    aa = torch.zeros((31,4))
     aa[:,0:1] = theta.view(-1,1)
     aa[:,1:] = r_hat.view(-1,3)
 

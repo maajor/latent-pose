@@ -1,12 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# Code adopted from https://github.com/CalciferZh/SMPL/blob/master/smpl_torch_batch.py
+# With simplification and correction to make it work with blender.
+
 import numpy as np
 import pickle
 import torch
 from torch.nn import Module
 import os
 
-
 class Skeleton(Module):
-  def __init__(self, skeleton_path='data/skeleton.pkl'):
+  def __init__(self, skeleton_path='data/skeleton.pt'):
     
     super(Skeleton, self).__init__()
     with open(skeleton_path, 'rb') as f:
@@ -71,7 +78,7 @@ class Skeleton(Module):
 
           Prameters:
           ---------
-          pose: Also known as 'theta', a [n_pose_joint,3] tensor indicating child joint rotation
+          pose: a [n_pose_joint,3] tensor indicating child joint rotation
           relative to parent joint. For root joint it's global orientation.
           Represented in a axis-angle format.
 
@@ -115,15 +122,27 @@ def main():
 
   device = torch.device("cpu")
 
-  pose = torch.from_numpy((np.random.rand(pose_size) - 0.5) * 0.5)\
-          .type(torch.float32).to(device)
+  pose = torch.from_numpy((np.random.rand(pose_size) - 0.5) * 0.0)\
+          .type(torch.float32).to(device).view(1,-1, 3)
 
   trans = torch.from_numpy(np.zeros(3)).type(torch.float32).to(device)
 
   model = Skeleton(skeleton_path='data/skeleton.pt')
   model.to(device)
-  j = model(pose.view(1,-1, 3), trans.view(1, 3))
-  model.write_obj("joints.pkl")
+  j = model(pose, trans.view(1, 3))
+
+  theta = torch.sqrt(torch.sum((pose)**2, dim=2)).view(1, -1, 1)
+  r_hat = pose / theta
+  aa = torch.zeros((31,4))
+  aa[:,0:1] = theta.view(-1,1)
+  aa[:,1:] = r_hat.view(-1,3)
+
+  result={}
+  result["pose"] = aa.view(-1,4).detach().cpu().numpy().tolist()
+  result["trans"] = trans.detach().cpu().numpy().tolist()
+  result["joints"] = j.detach().cpu().numpy().tolist()
+  with open("pose.pkl", "wb") as f:
+    pickle.dump(result, f)
 
 if __name__ == '__main__':
   main()

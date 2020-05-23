@@ -1,20 +1,9 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
+# -*- coding: utf-8 -*-
 #
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# Blender plugin to fetch predicted pose from server and apply on armature
 
 bl_info = {
     "name": "Latent IK",
@@ -24,7 +13,7 @@ bl_info = {
     "location": "3D View > Sidebar > Latent IK",
     "description": "IK",
     "warning": "",
-    "wiki_url": "",
+    "wiki_url": "https://github.com/maajor/latent-pose",
     "category": "Animation",
 }
 
@@ -111,6 +100,11 @@ class LatentIKProperty(bpy.types.PropertyGroup):
         description="RightFoot IK Controller",
         default="RightFootController"
     )
+    armature_name: StringProperty(
+        name="Armature Name",
+        description="Armature Name",
+        default="character"
+    )
 
 # GUI (Panel)
 
@@ -165,7 +159,12 @@ class ANIM_OT_LatentIKGetPose(Operator):
     bl_idname = "anim.likget_pose"
     bl_description = "Get Pose"
     bl_options = {'REGISTER', 'UNDO'}
-    mapping = {'Head': 16, 'Hips': 0, 'LHipJoint': 1, 'LThumb': 23, 'LeftArm': 18, 'LeftFingerBase': 21, 'LeftFoot': 4, 'LeftForeArm': 19, 'LeftHand': 20, 'LeftHandIndex1': 22, 'LeftLeg': 3, 'LeftShoulder': 17, 'LeftToeBase': 5, 'LeftUpLeg': 2, 'LowerBack': 11, 'Neck': 14, 'Neck1': 15, 'RHipJoint': 6, 'RThumb': 30, 'RightArm': 25, 'RightFingerBase': 28, 'RightFoot': 9, 'RightForeArm': 26, 'RightHand': 27, 'RightHandIndex1': 29, 'RightLeg': 8, 'RightShoulder': 24, 'RightToeBase': 10, 'RightUpLeg': 7, 'Spine': 12, 'Spine1': 13}
+    mapping = {'Head': 16, 'Hips': 0, 'LHipJoint': 1, 'LThumb': 23, 'LeftArm': 18, 
+    'LeftFingerBase': 21, 'LeftFoot': 4, 'LeftForeArm': 19, 'LeftHand': 20, 'LeftHandIndex1': 22, 
+    'LeftLeg': 3, 'LeftShoulder': 17, 'LeftToeBase': 5, 'LeftUpLeg': 2, 'LowerBack': 11, 'Neck': 14, 
+    'Neck1': 15, 'RHipJoint': 6, 'RThumb': 30, 'RightArm': 25, 'RightFingerBase': 28, 'RightFoot': 9, 
+    'RightForeArm': 26, 'RightHand': 27, 'RightHandIndex1': 29, 'RightLeg': 8, 'RightShoulder': 24, 
+    'RightToeBase': 10, 'RightUpLeg': 7, 'Spine': 12, 'Spine1': 13}
 
     def execute(op, context):
         latentik_properties = context.window_manager.latentik_properties
@@ -209,10 +208,12 @@ class ANIM_OT_LatentIKGetPose(Operator):
 
         result = op.query_pose_from_server(latentik_properties.server_address, param_dict)
 
-        if context.mode == 'OBJECT':
-            arm = context.selected_objects[0]
-        else:
-            arm = context.objects_in_mode_unique_data[0]
+        arm = bpy.data.objects[latentik_properties.armature_name]
+        if arm is None:
+            for ob in bpy.data.objects:
+                if ob.type is "ARMATURE":
+                    arm = ob
+                    latentik_properties.armature_name = ob.name
 
         op.apply_pose(arm, result)
 
@@ -261,8 +262,6 @@ def update_panel(self, context):
 
 
 class LatentIKAddonPreferences(AddonPreferences):
-    # this must match the addon name, use '__package__'
-    # when defining this in a submodule of a python package.
     bl_idname = __name__
 
     category: StringProperty(
@@ -280,6 +279,7 @@ class LatentIKAddonPreferences(AddonPreferences):
         col.label(text="Tab Category:")
         col.prop(self, "category", text="")
 
+addon_keymaps = []
 
 def register():
     bpy.utils.register_class(LatentIKProperty)
@@ -287,6 +287,14 @@ def register():
     bpy.utils.register_class(VIEW3D_PT_LatentIKUI)
     bpy.utils.register_class(ANIM_OT_LatentIKGetPose)
     bpy.utils.register_class(LatentIKAddonPreferences)
+
+    global addon_keymaps
+    wm = bpy.context.window_manager
+    km = wm.keyconfigs.addon.keymaps.new(name = "Node Editor", space_type = "NODE_EDITOR")
+    # Shift+P for shortcut
+    kmi = km.keymap_items.new("anim.likget_pose", type = "P", shift=True, value = "PRESS")
+    kmi.properties.name = "anim.likget_pose_sc"
+    addon_keymaps.append(km)
     update_panel(None, bpy.context)
 
 
@@ -295,6 +303,11 @@ def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_LatentIKUI)
     bpy.utils.unregister_class(ANIM_OT_LatentIKGetPose)
     bpy.utils.unregister_class(LatentIKAddonPreferences)
+    wm = bpy.context.window_manager
+    for km in addon_keymaps:
+        wm.keyconfigs.addon.keymaps.remove(km)
+    # clear the list
+    del addon_keymaps[:]
 
 if __name__ == "__main__":
     register()

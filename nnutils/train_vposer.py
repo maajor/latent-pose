@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+#
+# Code largely adoped from VPoser in SMPLify-X https://github.com/nghorbani/human_body_prior
+# 
+# Expressive Body Capture: 3D Hands, Face, and Body from a Single Image <https://arxiv.org/abs/1904.05866>
+#
+# Original Code Developed by:
+# Nima Ghorbani <https://nghorbani.github.io/>
+# Vassilis Choutas <https://ps.is.tuebingen.mpg.de/employees/vchoutas> for ContinousRotReprDecoder
+
 __all__ = []
 
 import os, shutil

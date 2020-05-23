@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# Util to convert data extracted from blender to VPoser's training data
+
 import os
 import pickle
 import torch
@@ -25,9 +32,6 @@ poses = torch.cat(poses, dim=0).squeeze(dim=1).numpy()
 
 np.random.shuffle(poses)
 
-# make root rotation 0
-poses[:,0,:] = 0
-
 lens = int(poses.shape[0])
 pose_train = poses[:int(0.7*lens),:,:]
 pose_val = poses[int(0.7*lens):int(0.9*lens),:,:]
@@ -35,7 +39,5 @@ pose_test = poses[int(0.9*lens):,:,:]
 torch.save(torch.from_numpy(pose_train), "data/train/pose_train.pt")
 torch.save(torch.from_numpy(pose_val), "data/train/pose_val.pt")
 torch.save(torch.from_numpy(pose_test), "data/train/pose_test.pt")
-
-
 
 #blender --background -P data/cmu-mocap/import_bvh_and_convert.py  --bvh data/cmu-mocap/01/01_02.bvh

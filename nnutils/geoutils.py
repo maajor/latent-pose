@@ -1,6 +1,5 @@
 import torch
 
-
 def angle_axis_to_rotation_matrix(angle_axis):
     """Convert 3d vector of axis-angle rotation to 4x4 rotation matrix
 

@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# blender python script to import an bvh and extract pose
+
 import bpy
 import numpy as np
 import pickle

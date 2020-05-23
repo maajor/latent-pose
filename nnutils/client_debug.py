@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# a debug util to query pose from server
+
 import requests
 import pickle
 import torch

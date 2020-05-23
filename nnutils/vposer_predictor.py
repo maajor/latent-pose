@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Author: maajor <info@ma-yidong.com>
+# Date : 2020-05-23
+# 
+# Predict latent-pose and translation with joints
+
 import torch
 from torch import nn
 from .vposer import VPoser
@@ -18,9 +25,6 @@ class VPoserPredictor(nn.Module):
         pose_embedding = torch.zeros(1, 32).cuda()
         self.register_buffer('pose_embedding', pose_embedding.type(torch.float32))
 
-        global_rotation = torch.zeros(1, 1, 3).cuda()
-        self.register_buffer('global_rotation', global_rotation.type(torch.float32))
-
         global_trans = torch.zeros(1, 1, 3).cuda()
         self.register_buffer('global_trans', global_trans.type(torch.float32))
 
@@ -31,7 +35,6 @@ class VPoserPredictor(nn.Module):
 
     def get_pose(self):
         body_pose = self.vposer.decode(self.pose_embedding, output_type='aa').view(1, 31, 3)
-        pose = torch.cat([self.global_rotation, body_pose], dim=1)
-        return pose, self.global_trans
+        return body_pose, self.global_trans
 
 
