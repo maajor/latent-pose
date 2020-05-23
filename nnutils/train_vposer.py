@@ -20,7 +20,7 @@ class VPoserTrainer:
     def __init__(self, work_dir, skeleton_path):
         from .dataloader import AnimationDS
 
-        self.batch_size = 5000
+        self.batch_size = 10000
 
         self.pt_dtype = torch.float32
 
@@ -192,4 +192,4 @@ def run_vposer_trainer(datapath, bodymodel_path):
     print('Final loss on test set is %s' % (' | '.join(['%s = %.2e' % (k, v) for k, v in test_loss_dict.items()])))
 
 if __name__ == '__main__':
-    run_vposer_trainer("data/pose", "data/skeleton.pt")
+    run_vposer_trainer("data/train/pose", "data/skeleton.pt")

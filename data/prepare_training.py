@@ -23,6 +23,8 @@ for i in loop:
         poses.append(aa)
 poses = torch.cat(poses, dim=0).squeeze(dim=1).numpy()
 
+np.random.shuffle(poses)
+
 # make root rotation 0
 poses[:,0,:] = 0
 

@@ -56,7 +56,7 @@ class Skeleton(Module):
     return R
 
   def to4x4(self, rotationMatrix):
-    identity = torch.eye(4).view(1, 1, 4,4).repeat(rotationMatrix.shape[0],rotationMatrix.shape[1],1,1)
+    identity = torch.eye(4).view(1, 1, 4,4).repeat(rotationMatrix.shape[0],rotationMatrix.shape[1],1,1).to(rotationMatrix.device)
     identity[:, :, :3,:3] = rotationMatrix
     return identity
 
@@ -95,7 +95,6 @@ class Skeleton(Module):
     # transform matrix of each joints
     root = torch.matmul(J[:,0], localRot[:,0])
     results = [root]
-
     for i in range(1, self.kintree_table.shape[1]):
       localTransform = torch.matmul(J[:, i], localRot[:,i])
       objectTransform =  torch.matmul(results[parent[i]],localTransform)
