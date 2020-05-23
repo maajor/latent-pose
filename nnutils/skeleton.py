@@ -18,6 +18,7 @@ class Skeleton(Module):
     self.J_num = self.J.size()[0]
     # parent joint id to child joint id mapping, 2 * n_joints
     self.kintree_table = params['kintree_table']
+    self.bone_id = params['name_to_id']
 
   @staticmethod
   def rodrigues(r):
@@ -54,44 +55,10 @@ class Skeleton(Module):
     R = cos * i_cube + (1 - cos) * dot + torch.sin(theta) * m
     return R
 
-  @staticmethod
-  def with_zeros(x):
-    """
-    Append a [0, 0, 0, 1] tensor to a [3, 4] tensor.
-
-    Parameter:
-    ---------
-    x: Tensor to be appended.
-
-    Return:
-    ------
-    Tensor after appending of shape [4,4]
-
-    """
-    ones = torch.tensor(
-      [[[0.0, 0.0, 0.0, 1.0]]], dtype=torch.float32
-    ).expand(x.shape[0],-1,-1).to(x.device)
-    ret = torch.cat((x, ones), dim=1)
-    return ret
-
-  @staticmethod
-  def pack(x):
-    """
-    Append zero tensors of shape [4, 3] to a batch of [4, 1] shape tensor.
-
-    Parameter:
-    ----------
-    x: A tensor of shape [batch_size, 4, 1]
-
-    Return:
-    ------
-    A tensor of shape [batch_size, 4, 4] after appending.
-
-    """
-    zeros43 = torch.zeros(
-      (x.shape[0], x.shape[1], 4, 3), dtype=torch.float32).to(x.device)
-    ret = torch.cat((zeros43, x), dim=3)
-    return ret
+  def to4x4(self, rotationMatrix):
+    identity = torch.eye(4).view(1, 1, 4,4).repeat(rotationMatrix.shape[0],rotationMatrix.shape[1],1,1)
+    identity[:, :, :3,:3] = rotationMatrix
+    return identity
 
   def write_obj(self, file_name):
     with open(file_name, 'wb') as fp:
@@ -115,38 +82,24 @@ class Skeleton(Module):
           A tensor for vertices, and a numpy ndarray as face indices.
 
     """
-    id_to_col = {i: self.kintree_table[0, i]
-                 for i in range(self.kintree_table.shape[1])}
     parent = {
       self.kintree_table[1, i]: self.kintree_table[0, i]
       for i in range(1, self.kintree_table.shape[1])
     }
 
-    J = self.J
-
     batch_num = pose.shape[0]
-
-    J = self.J.view(1,-1,3).repeat(batch_num,1,1)
-    R_cube_big = self.rodrigues(pose.view(-1, 1, 3)).reshape(batch_num, -1, 3, 3)
-
+    J = self.J.view(1,-1, 4, 4).repeat(batch_num, 1, 1, 1)
+    localRot = self.rodrigues(pose.view(-1, 1, 3)).reshape(batch_num, -1, 3, 3)
+    localRot = self.to4x4(localRot)
 
     # transform matrix of each joints
-    results = []
-    results.append(
-      self.with_zeros(torch.cat((R_cube_big[:, 0], torch.reshape(J[:, 0, :], (-1, 3, 1))), dim=2))
-    )
+    root = torch.matmul(J[:,0], localRot[:,0])
+    results = [root]
+
     for i in range(1, self.kintree_table.shape[1]):
-      results.append(
-        torch.matmul(
-          results[parent[i]],
-          self.with_zeros(
-            torch.cat(
-              (R_cube_big[:, i], torch.reshape(J[:, i, :] - J[:, parent[i], :], (-1, 3, 1))),
-              dim=2
-            )
-          )
-        )
-      )
+      localTransform = torch.matmul(J[:, i], localRot[:,i])
+      objectTransform =  torch.matmul(results[parent[i]],localTransform)
+      results.append(objectTransform)
     
     stacked = torch.stack(results, dim=1)
 
@@ -168,7 +121,7 @@ def main():
 
   trans = torch.from_numpy(np.zeros(3)).type(torch.float32).to(device)
 
-  model = Skeleton(model_path='data/skeleton.pkl')
+  model = Skeleton(skeleton_path='data/skeleton.pt')
   model.to(device)
   j = model(pose.view(1,-1, 3), trans.view(1, 3))
   model.write_obj("joints.pkl")

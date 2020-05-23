@@ -3,13 +3,13 @@ import pickle
 import torch
 import tqdm
 import numpy as np
-from nnutils.vposer_sbal import VPoser
+from nnutils.vposer import VPoser
 
 extracted_anim_path = "data/extracted/"
 extracted_anim_files = []
 for r, d, f in os.walk(extracted_anim_path):
     extracted_anim_files.extend(["{}/{}".format(r,file) for file in f if file.endswith(".pkl")])
-print(extracted_anim_files)
+extracted_anim_files.sort()
 
 loop = tqdm.tqdm(range(0, len(extracted_anim_files)))
 poses = []
