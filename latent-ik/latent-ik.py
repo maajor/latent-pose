@@ -143,7 +143,7 @@ class VIEW3D_PT_LatentIKUI(Panel):
         row.prop(latentik_properties, "key_rfoot_ik_enable")
         layout.separator()
         row = col.row()
-        row.operator("anim.likget_pose", icon="KEY_HLT")
+        row.operator("anim.latentik_get_pose", icon="KEY_HLT")
 
 
 param_dict = {}
@@ -154,10 +154,10 @@ resp = requests.get("http://127.0.0.1:1028/predict",
 result = resp.json()
 print(result)
 
-class ANIM_OT_LatentIKGetPose(Operator):
-    bl_label = "Get Pose"
-    bl_idname = "anim.likget_pose"
-    bl_description = "Get Pose"
+class ANIM_OT_latentik_get_pose(Operator):
+    bl_label = "Get Pose (Ctrl+P)"
+    bl_idname = "anim.latentik_get_pose"
+    bl_description = "Get Pose (Ctrl+P)"
     bl_options = {'REGISTER', 'UNDO'}
     mapping = {'Head': 16, 'Hips': 0, 'LHipJoint': 1, 'LThumb': 23, 'LeftArm': 18, 
     'LeftFingerBase': 21, 'LeftFoot': 4, 'LeftForeArm': 19, 'LeftHand': 20, 'LeftHandIndex1': 22, 
@@ -285,15 +285,14 @@ def register():
     bpy.utils.register_class(LatentIKProperty)
     bpy.types.WindowManager.latentik_properties = bpy.props.PointerProperty(type=LatentIKProperty)
     bpy.utils.register_class(VIEW3D_PT_LatentIKUI)
-    bpy.utils.register_class(ANIM_OT_LatentIKGetPose)
+    bpy.utils.register_class(ANIM_OT_latentik_get_pose)
     bpy.utils.register_class(LatentIKAddonPreferences)
 
     global addon_keymaps
     wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(name = "Node Editor", space_type = "NODE_EDITOR")
-    # Shift+P for shortcut
-    kmi = km.keymap_items.new("anim.likget_pose", type = "P", shift=True, value = "PRESS")
-    kmi.properties.name = "anim.likget_pose_sc"
+    km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='EMPTY')
+    # Ctrl+P for shortcut
+    kmi = km.keymap_items.new("anim.latentik_get_pose", type = "P", ctrl=True, value = "PRESS")
     addon_keymaps.append(km)
     update_panel(None, bpy.context)
 
@@ -301,7 +300,7 @@ def register():
 def unregister():
     del bpy.types.WindowManager.latentik_properties
     bpy.utils.unregister_class(VIEW3D_PT_LatentIKUI)
-    bpy.utils.unregister_class(ANIM_OT_LatentIKGetPose)
+    bpy.utils.unregister_class(ANIM_OT_latentik_get_pose)
     bpy.utils.unregister_class(LatentIKAddonPreferences)
     wm = bpy.context.window_manager
     for km in addon_keymaps:

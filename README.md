@@ -1,9 +1,11 @@
 # Latent Pose
 
-A data-driven IK demo in Blender
+A data-driven IK demo in Blender  
 Pose sampled from a VAE(Vposer) trained with CMU mocap data.
 
 ![demo](imgs/demo.gif)
+
+My blog on this: [Data-Driven IK In Character| 角色中的数据驱动反向动力学](http://ma-yidong.com/2020/05/24/data-driven-ik-in-character/)
 
 # Requirement
 
@@ -23,7 +25,7 @@ in Blender-Edit-Preference-Addons-Install, select `latent-ik/latent-ik.py` to in
 after installment, enable Latent-IK plugin
 
 3. Open latent-ik.blend  
-Next you can move controllers, use short-cut `Shift+P` to update pose  
+Next you can move controllers, use short-cut `Ctrl+P` to update pose  
 Also you can select the Armature and enable or disable some controller  
 ![ui](imgs/ui.png)
 
